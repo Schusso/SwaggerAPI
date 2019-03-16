@@ -1,0 +1,593 @@
+swagger: "2.0"
+info:
+  description: "Das System muss eine Schnittstelle zum KIS (Krankenhaus-Informations-System) bereitstellen."
+  version: "1.0.0"
+  title: "Schnittstelle zum Krankenhaus Informations System"
+  termsOfService: "http://swagger.io/terms/"
+  contact:
+    email: "patrick.vonallmen@csbe.ch"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "kis.swagger.io"
+basePath: "/v2"
+tags:
+  - name: "befunde"
+    description: "Alles über die Befunde"
+    externalDocs:
+      description: "mehr hier"
+      url: "http://kis.swagger.io"
+  - name: "patient"
+    description: "Zugang zu den Patient daten"
+  - name: "doktoren"
+    description: "Zugang zu den Daten der Doktoren"
+    externalDocs:
+      description: "mehr über die Schnittstelle"
+      url: "http://kis.swagger.io"
+schemes:
+  - "https"
+  - "http"
+paths:
+  /doktor:
+    post:
+      tags:
+        - "doktor"
+      summary: "Erstellt einen neuen Doktor"
+      description: ""
+      operationId: "addDoc"
+      consumes:
+        - "application/json"
+        - "application/xml"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Doktor auswahl"
+          required: true
+          schema:
+            $ref: "#/definitions/Doc"
+      responses:
+        405:
+          description: "Ungültige Eingabe"
+      security:
+        - docstore_auth:
+            - "write:docs"
+            - "read:docs"
+    put:
+      tags:
+        - "doktor"
+      summary: "Aktualisiert einen Doktor"
+      description: ""
+      operationId: "updateDoc"
+      consumes:
+        - "application/json"
+        - "application/xml"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Doktor auswahl"
+          required: true
+          schema:
+            $ref: "#/definitions/Doc"
+      responses:
+        400:
+          description: "Ungültige ID!"
+        404:
+          description: "Doktor nicht gefunden!"
+        405:
+          description: "Verifizierungsfehler!"
+      security:
+        - docstore_auth:
+            - "write:docs"
+            - "read:docs"
+  /doktor/{doktorId}:
+    get:
+      tags:
+        - "doktor"
+      summary: "Gibt einen Doktor nach ID zurück"
+      description: "Gibt einen einzigen Doktor zurück"
+      operationId: "getDocById"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "doktorId"
+          in: "path"
+          description: "ID des Doktors, der angezeigt werden soll"
+          required: true
+          type: "integer"
+          format: "int64"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Doc"
+        400:
+          description: "Ungültige ID!"
+        404:
+          description: "Doktor nicht gefunden!"
+      security:
+        - api_key: []
+    post:
+      tags:
+        - "doktor"
+      summary: "Aktualisiert einen Doktor per ID"
+      description: ""
+      operationId: "updateDocWithForm"
+      consumes:
+        - "application/x-www-form-urlencoded"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "doktorId"
+          in: "path"
+          description: "ID des Doktors, der geudpdated werden soll"
+          required: true
+          type: "integer"
+          format: "int64"
+        - name: "name"
+          in: "formData"
+          description: "Aktualisierter Name des Doktors"
+          required: false
+          type: "string"
+        - name: "status"
+          in: "formData"
+          description: "Aktualisierter Status des Doktors"
+          required: false
+          type: "string"
+      responses:
+        405:
+          description: "Ungültige Eingabe"
+      security:
+        - docstore_auth:
+            - "write:docs"
+            - "read:docs"
+    delete:
+      tags:
+        - "doktor"
+      summary: "Löscht einen Doktor"
+      description: ""
+      operationId: "deleteDoc"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "api_key"
+          in: "header"
+          required: false
+          type: "string"
+        - name: "doktorId"
+          in: "path"
+          description: "Doktor der gelöscht werden soll"
+          required: true
+          type: "integer"
+          format: "int64"
+      responses:
+        400:
+          description: "Ungültige ID!"
+        404:
+          description: "Doktor nicht gefunden!"
+      security:
+        - docstore_auth:
+            - "write:docs"
+            - "read:docs"
+  /medikamente/inventar:
+    get:
+      tags:
+        - "medikamente"
+      summary: "Zeigt den Lagerbestand aller Medikamente an"
+      description: "Returns a map of status codes to quantities"
+      operationId: "getInventar"
+      produces:
+        - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "object"
+            additionalProperties:
+              type: "integer"
+              format: "int32"
+      security:
+        - api_key: []
+  /medikamente/bestellung:
+    post:
+      tags:
+        - "medikamente"
+      summary: "Bestelle ein Medikament"
+      description: ""
+      operationId: "placeOrder"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Ausgeführte Bestellung für einen Patienten"
+          required: true
+          schema:
+            $ref: "#/definitions/Order"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Order"
+        400:
+          description: "Invalid Order"
+  /medikamente/bestellung/{bestellungId}:
+    get:
+      tags:
+        - "medikamente"
+      summary: "Gibt eine einzige Bestellung zurück"
+      description: "Um eine gültige Antwort zu erhalten, muss eine ID zwischen 1 und 10 angegeben werden"
+      operationId: "getOrderById"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "bestellungId"
+          in: "path"
+          description: "ID der Bestellung die angezeigt werden soll"
+          required: true
+          type: "integer"
+          maximum: 10.0
+          minimum: 1.0
+          format: "int64"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Order"
+        400:
+          description: "Ungültige ID!"
+        404:
+          description: "ID nicht gefunden!"
+    delete:
+      tags:
+        - "medikamente"
+      summary: "Löscht eine einzige Bestellung"
+      description: "Um eine gültige Antwort zu erhalten, muss eine ID zwischen 1 und 10 angegeben werden"
+      operationId: "deleteOrder"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "bestellungId"
+          in: "path"
+          description: "ID der Bestellung die gelöscht werden soll"
+          required: true
+          type: "integer"
+          minimum: 1.0
+          format: "int64"
+      responses:
+        400:
+          description: "Ungültige ID!"
+        404:
+          description: "ID nicht gefunden!"
+  /patient:
+    post:
+      tags:
+        - "patient"
+      summary: "Erstellt einen Patienten"
+      description: "Diese Aktion kann nur von einem eingeloggten Doktor ausgeführt werden"
+      operationId: "createPatient"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Erstellter Patient"
+          required: true
+          schema:
+            $ref: "#/definitions/Patient"
+      responses:
+        default:
+          description: "successful operation"
+  /patient/createWithArray:
+    post:
+      tags:
+        - "patient"
+      summary: "Erstellt ein Array von Patienten"
+      description: ""
+      operationId: "createPatientsWithArrayInput"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Liste von Patienten"
+          required: true
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Patient"
+      responses:
+        default:
+          description: "successful operation"
+  /patient/createWithList:
+    post:
+      tags:
+        - "patient"
+      summary: "Erstellt eine Liste von Patienten"
+      description: ""
+      operationId: "createPatientsWithListInput"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Liste von Patienten"
+          required: true
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Patient"
+      responses:
+        default:
+          description: "successful operation"
+  /patient/login:
+    get:
+      tags:
+        - "patient"
+      summary: "Ermöglicht einem Patienten sich einzuloggen"
+      description: ""
+      operationId: "loginPatient"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "patientname"
+          in: "query"
+          description: "Benutzername für Login"
+          required: true
+          type: "string"
+        - name: "password"
+          in: "query"
+          description: "Passwort für Login"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "string"
+          headers:
+            X-Rate-Limit:
+              type: "integer"
+              format: "int32"
+              description: "Erlaubte Anfragen/pro h"
+            X-Expires-After:
+              type: "string"
+              format: "date-time"
+              description: "Datum wann die Sitzung abläuft"
+        400:
+          description: "Ungültiger Benutzername/Passwort"
+  /patient/logout:
+    get:
+      tags:
+        - "patient"
+      summary: "Loggt den Patienten aus"
+      description: ""
+      operationId: "logoutPatient"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters: []
+      responses:
+        default:
+          description: "successful operation"
+  /patient/{patientname}:
+    get:
+      tags:
+        - "patient"
+      summary: "Gibt den Patienten mit dem Patientname zurück"
+      description: ""
+      operationId: "getPatientByName"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "patientname"
+          in: "path"
+          description: "Bestimmt den Namen welcher gesucht wird"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Patient"
+        400:
+          description: "Ungültiger Name"
+        404:
+          description: "Patient nicht gefunden"
+    put:
+      tags:
+        - "patient"
+      summary: "Aktualisieren eines Patienten"
+      description: "Dies kann nur vom eingeloggten Doktor ausgeführt werden"
+      operationId: "updatePatient"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "patientname"
+          in: "path"
+          description: "Name der aktualisiert werden soll"
+          required: true
+          type: "string"
+        - in: "body"
+          name: "body"
+          description: "Patientennamen aktualisiert"
+          required: true
+          schema:
+            $ref: "#/definitions/Patient"
+      responses:
+        400:
+          description: "Ungültiger Name"
+        404:
+          description: "Patient nicht gefunden"
+    delete:
+      tags:
+        - "patient"
+      summary: "Löscht einen Patienten"
+      description: "Dies kann nur vom eingeloggten Doktor ausgeführt werden"
+      operationId: "deletePatient"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "patientname"
+          in: "path"
+          description: "Name, der gelöscht werden soll"
+          required: true
+          type: "string"
+      responses:
+        400:
+          description: "Ungültiger Name"
+        404:
+          description: "Patient nicht gefunden"
+securityDefinitions:
+  docstore_auth:
+    type: "oauth2"
+    authorizationUrl: "http://docstore.swagger.io/oauth/dialog"
+    flow: "implicit"
+    scopes:
+      write:docs: "modify docs in your account"
+      read:docs: "read your docs"
+  api_key:
+    type: "apiKey"
+    name: "api_key"
+    in: "header"
+definitions:
+  Order:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      doktorId:
+        type: "integer"
+        format: "int64"
+      quantity:
+        type: "integer"
+        format: "int32"
+      shipDate:
+        type: "string"
+        format: "date-time"
+      status:
+        type: "string"
+        description: "Order Status"
+        enum:
+          - "placed"
+          - "approved"
+          - "delivered"
+      complete:
+        type: "boolean"
+        default: false
+    xml:
+      name: "Order"
+  Category:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      name:
+        type: "string"
+    xml:
+      name: "Category"
+  Patient:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      patientname:
+        type: "string"
+      firstName:
+        type: "string"
+      lastName:
+        type: "string"
+      email:
+        type: "string"
+      password:
+        type: "string"
+      phone:
+        type: "string"
+      patientStatus:
+        type: "integer"
+        format: "int32"
+        description: "Patient Status"
+    xml:
+      name: "Patient"
+  Tag:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      name:
+        type: "string"
+    xml:
+      name: "Tag"
+  Doc:
+    type: "object"
+    required:
+      - "name"
+      - "photoUrls"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      category:
+        $ref: "#/definitions/Category"
+      name:
+        type: "string"
+        example: "doggie"
+      photoUrls:
+        type: "array"
+        xml:
+          name: "photoUrl"
+          wrapped: true
+        items:
+          type: "string"
+      tags:
+        type: "array"
+        xml:
+          name: "tag"
+          wrapped: true
+        items:
+          $ref: "#/definitions/Tag"
+      status:
+        type: "string"
+        description: "Doc status in the store"
+        enum:
+          - "available"
+          - "pending"
+          - "sold"
+    xml:
+      name: "Doc"
+  ApiResponse:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      type:
+        type: "string"
+      message:
+        type: "string"
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
